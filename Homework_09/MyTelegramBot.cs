@@ -156,7 +156,7 @@ namespace Homework_09
                             new KeyboardButton("Geo"){RequestLocation = true}
                         }
                     });
-                    await _client.SendTextMessageAsync(msg.Chat.Id, "", replyMarkup: replyKeyboard); 
+                    await _client.SendTextMessageAsync(msg.Chat.Id, "Клавиатура включена", replyMarkup: replyKeyboard); 
                     break;
                 default:
                     await _client.SendTextMessageAsync(msg.Chat.Id, "Прости, я не понял.");
