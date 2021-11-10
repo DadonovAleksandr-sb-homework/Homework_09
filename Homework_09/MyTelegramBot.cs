@@ -14,34 +14,37 @@ namespace Homework_09
     {
         private TelegramBotClient _client;
         private string _name;
-        
+        private List<BotFile> _files;
         private enum BotCmd { ShowFiles }
-        private const string ROOT_PATH = "BotData";
-        private const int MAX_FILE_NAME = 60;
-        private Random rnd;
-        private List<BotFile> files;
+        private const string RootPath = "BotData";
+        private const int MaxFileName = 60;
+        
+        public string Name { get { return _name; } } 
 
-        public string Name
-        {
-            get { return _name; }
-        } 
-
+        /// <summary>
+        /// Инициализация клиента
+        /// </summary>
+        /// <param name="token"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
         public MyTelegramBot(string token)
         {
-            if (string.IsNullOrEmpty(token))
-                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrEmpty(token))                        // если вместо токена передали пустую строку, 
+                throw new ArgumentNullException(nameof(token));     // генерируем исключение
             
-            _client = new TelegramBotClient(token);
-            var me = _client.GetMeAsync().Result;
+            _client = new TelegramBotClient(token);                 // инициализация клиента
+            var me = _client.GetMeAsync().Result;               // получаем информацию о боте
 
             if (me is not null && !string.IsNullOrEmpty(me.Username))
                 _name = me.Username;
             else
                 throw new Exception("Не удалось получить информацию о боте!");
-            
-            rnd = new Random();
         }
         
+        /// <summary>
+        /// Запуск бота
+        /// </summary>
+        /// <returns></returns>
         public bool Start()
         {
             try
@@ -58,6 +61,11 @@ namespace Homework_09
             }
         }
 
+        /// <summary>
+        /// Обработка входящих текстовых сообщений
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void MessageListener(object? sender, MessageEventArgs e)
         {
             if(e.Message is null) return;
@@ -94,6 +102,11 @@ namespace Homework_09
             }
         }
 
+        /// <summary>
+        /// Обработка нажатия виртуальных кнопок
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void CallbackQuery(object? sender, CallbackQueryEventArgs e)
         {
             Console.WriteLine($"{DateTime.Now} \t\t {e.CallbackQuery.From.FirstName} {e.CallbackQuery.From.LastName} \t\t touch button:{e.CallbackQuery.Data}");
@@ -154,12 +167,13 @@ namespace Homework_09
         /// <summary>
         /// Обработка документов
         /// </summary>
-        /// <param name="eMessage"></param>
+        /// <param name="fileId">идентификатор файла на серверах Telegram</param>
+        /// <param name="fileName">имя файла</param>
         /// <exception cref="NotImplementedException"></exception>
         public void DocumentHandler(string fileId, string fileName)
         {
-            if (!Directory.Exists(ROOT_PATH)) { Directory.CreateDirectory(ROOT_PATH); }
-            DownloadFile(fileId, Path.Combine(ROOT_PATH, fileName));
+            if (!Directory.Exists(RootPath)) { Directory.CreateDirectory(RootPath); }
+            DownloadFile(fileId, Path.Combine(RootPath, fileName));
         }
 
         public async void MenuHandler(CallbackQuery query)
@@ -167,33 +181,25 @@ namespace Homework_09
             if (query.Data == "ShowFiles")
             {
                 List<List<InlineKeyboardButton>> keyboard = new List<List<InlineKeyboardButton>>();
-                files = GetFileList();
-                foreach (var file in files)
+                _files = GetFileList();
+                foreach (var file in _files)
                 {
                     keyboard.Add(
                         new List<InlineKeyboardButton>
                         {
                             InlineKeyboardButton.WithCallbackData(
-                                $"{(file.Name.Length > 60 ? file.Name.Substring(0, 60) : file.Name)}",
+                                $"{(file.Name.Length > MaxFileName ? file.Name.Substring(0, MaxFileName) : file.Name)}",
                                 file.Id.ToString())
                         });
                 }
 
                 var keyboardMarkup = new InlineKeyboardMarkup(keyboard);
 
-                var inlineKeyboard = new InlineKeyboardMarkup(new[]
-                {
-                    new[]
-                    {
-                        InlineKeyboardButton.WithCallbackData("Список загруженных файлов", BotCmd.ShowFiles.ToString())
-                    },
-                    new[] { InlineKeyboardButton.WithCallbackData("Вернуться в чат", "ReturnToChat") }
-                });
                 await _client.SendTextMessageAsync(query.From.Id, "Список файлов:",
                     replyMarkup: keyboardMarkup);
             }
 
-            foreach (var file in files)
+            foreach (var file in _files)
             {
                 if (query.Data == file.Id.ToString())
                 {
@@ -204,14 +210,11 @@ namespace Homework_09
                     
                 }
             }
-            
-            
         }
         
        
         private async void DownloadFile(string fileId, string path)
         {
-            //TODO: реализовать диалог с пользователем (сохранять ли файл на диск?, как назвать?)
             try
             {
                 var file = await _client.GetFileAsync(fileId);
@@ -228,8 +231,9 @@ namespace Homework_09
 
         private List<BotFile> GetFileList()
         {
+            Random rnd = new Random();
             var ls = new List<BotFile>();
-            foreach (var file in GetRecursFiles(ROOT_PATH))
+            foreach (var file in GetRecursFiles(RootPath))
             {
                 ls.Add(new BotFile(rnd.Next(), file));
             }
@@ -272,10 +276,10 @@ namespace Homework_09
         
         private string CheckDirectory(string path)
         {
-            if (!Directory.Exists(ROOT_PATH)) { Directory.CreateDirectory(ROOT_PATH); }
-            if (!Directory.Exists($"{ROOT_PATH}/{path}")) { Directory.CreateDirectory($"{ROOT_PATH}/{path}"); }
+            if (!Directory.Exists(RootPath)) { Directory.CreateDirectory(RootPath); }
+            if (!Directory.Exists($"{RootPath}/{path}")) { Directory.CreateDirectory($"{RootPath}/{path}"); }
 
-            return $"{ROOT_PATH}/{path}";
+            return $"{RootPath}/{path}";
         }
 
         
