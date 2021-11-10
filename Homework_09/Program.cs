@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 
 namespace Homework_09
@@ -25,11 +26,9 @@ namespace Homework_09
             //     Бот позволяет сохранять на диск изображения, аудио- и другие файлы.
             //     С помощью произвольной команды можно просмотреть список сохранённых файлов и скачать любой из них.
 
-            string token = "1734825343:AAEHjIFX2yF4bZ3ZWLZJRb8WBl5TTbDWN6U";        // TODO: вынести токен в файл
-
             try
             {
-                var bot = new MyTelegramBot(token);
+                var bot = new MyTelegramBot(File.ReadAllText("token"));
                 if(bot.Start())
                     Console.WriteLine($"Запуск бота {bot.Name}");
             }
@@ -41,8 +40,6 @@ namespace Homework_09
                 
             Console.ReadLine();
         }
-
         
-
     }
 }
