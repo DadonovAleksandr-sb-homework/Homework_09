@@ -28,9 +28,16 @@ namespace Homework_09
 
             try
             {
-                var bot = new MyTelegramBot(File.ReadAllText("token"));         // своя обертка для телеграм-клиента
-                if(bot.Start())
-                    Console.WriteLine($"Запуск бота {bot.Name}");
+                if (File.Exists("token"))
+                {
+                    var bot = new MyTelegramBot(File.ReadAllText("token"));         // своя обертка для телеграм-клиента
+                    if(bot.Start())
+                        Console.WriteLine($"Запуск бота {bot.Name}");    
+                }
+                else
+                {
+                    throw new FileNotFoundException();
+                }
             }
             catch (Exception e)
             {
